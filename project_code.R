@@ -39,10 +39,13 @@ genes_to_keep <- rownames(zeros2)
 #Subset data DF based on genes left in zeros DF
 data2 <- data[,colnames(data) %in% genes_to_keep]
 dim(data2)
-#Replace all 0 values with -1
-data2[data2 == 0] <- -1
-which(data2 == 0)
-
+#Apply log2 transform 
+data3 <- apply(data2, MARGIN = 2, FUN = log2)
+#Replace all -Inf values (aka missing values) with -1
+length(which(data3 == -Inf))
+data3[data3 == -Inf] <- -1
+length(which(data3 == -Inf))
+length(which(data3 == -1))
 
 ## Ordination
 
@@ -57,3 +60,11 @@ which(data2 == 0)
 
 
 ## Evaluations
+
+
+
+
+
+
+
+
