@@ -11,7 +11,8 @@ install.packages('glmnet')
 library(glmnet)
 
 ## Load data
-data <- read.csv('/homes/anovak9/stats/data.csv', header = TRUE, stringsAsFactors = FALSE)
+# data <- read.csv('/homes/anovak9/stats/data.csv', header = TRUE, stringsAsFactors = FALSE)
+data <- read.csv('C:/Users/Tristan Kosciuch/OneDrive - Loyola University Chicago/Loyola/Classes/STAT 437/TCGA-PANCAN-HiSeq-801x20531/data.csv', header = TRUE, stringsAsFactors = FALSE)
 colnames(data)[1] <- 'sample'
 str(data)
 
@@ -21,3 +22,13 @@ str(data)
 
 
 ## Normalization
+
+
+## Data transformations
+
+# PCA
+
+
+
+# tSNE
+
