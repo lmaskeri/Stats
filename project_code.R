@@ -107,17 +107,30 @@ hull_tSNE <- tSNE_data %>% group_by(Class) %>% slice(chull(`1`,`2`))
 tSNE_plot <- ggplot(data = tSNE_data, aes(x = `1`,y = `2`)) + aes(color = Class, fill = Class) + geom_point()+ geom_polygon(data = hull_tSNE, alpha = 0.4)
 
 
-#### Model fitting and validation #### - http://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html
+#### Train Test Splitting ####
+
+# The paper did a (Train:108,Test:77) split (line 90, Normalization.R)
+
+set.seed(134)
+# Train test split, current ratio is 9:1 train:test
+Train <- createDataPartition(data4$Class, p=0.9, list=FALSE)
+
+
+#### Model fitting and cross validation within the test set ####
 
 # 10-fold cross validation
-cv_data4 <- cv.glmnet(as.matrix(data4[,-c(1,2)]), factor(data4[,c(2)]), family = "multinomial",
-                      type.measure = "class")
-cv_PCA <- cv.glmnet(as.matrix(PCA_data[,-c(1,2)]), factor(PCA_data[,c(2)]), family = "multinomial",
-                      type.measure = "class")
-cv_UMAP <- cv.glmnet(as.matrix(UMAP_data[,-c(1,2)]), factor(UMAP_data[,c(2)]), family = "multinomial",
-                      type.measure = "class")
-cv_tSNE <- cv.glmnet(as.matrix(tSNE_data[,-c(1,2)]), factor(tSNE_data[,c(2)]), family = "multinomial",
-                      type.measure = "class")
+cv_data4 <- cv.glmnet(as.matrix(data4[Train,-c(1,2)]), factor(data4[Train,c(2)]), family="multinomial", alpha=.93, thresh = 1e-07,
+                      lambda = c(0.1,0.05,0.01,0.005,0.001, 0.0005, 0.0001),
+                      type.multinomial="grouped", nfolds=10)
+cv_PCA <- cv.glmnet(as.matrix(PCA_data[Train,-c(1,2)]), factor(PCA_data[Train,c(2)]), family="multinomial", alpha=.93, thresh = 1e-07,
+                    lambda = c(0.1,0.05,0.01,0.005,0.001, 0.0005, 0.0001),
+                    type.multinomial="grouped", nfolds=10)
+cv_UMAP <- cv.glmnet(as.matrix(UMAP_data[Train,-c(1,2)]), factor(UMAP_data[Train,c(2)]), family="multinomial", alpha=.93, thresh = 1e-07,
+                     lambda = c(0.1,0.05,0.01,0.005,0.001, 0.0005, 0.0001),
+                     type.multinomial="grouped", nfolds=10)
+cv_tSNE <- cv.glmnet(as.matrix(tSNE_data[Train,-c(1,2)]), factor(tSNE_data[Train,c(2)]), family="multinomial", alpha=.93, thresh = 1e-07,
+                     lambda = c(0.1,0.05,0.01,0.005,0.001, 0.0005, 0.0001),
+                     type.multinomial="grouped", nfolds=10)
 
 ## Testing
 
