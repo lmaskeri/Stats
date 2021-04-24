@@ -112,7 +112,12 @@ tSNE_plot <- ggplot(data = tSNE_data, aes(x = `1`,y = `2`)) + aes(color = Class,
 # 10-fold cross validation
 cv_data4 <- cv.glmnet(as.matrix(data4[,-c(1,2)]), factor(data4[,c(2)]), family = "multinomial",
                       type.measure = "class")
-
+cv_PCA <- cv.glmnet(as.matrix(PCA_data[,-c(1,2)]), factor(PCA_data[,c(2)]), family = "multinomial",
+                      type.measure = "class")
+cv_UMAP <- cv.glmnet(as.matrix(UMAP_data[,-c(1,2)]), factor(UMAP_data[,c(2)]), family = "multinomial",
+                      type.measure = "class")
+cv_tSNE <- cv.glmnet(as.matrix(tSNE_data[,-c(1,2)]), factor(tSNE_data[,c(2)]), family = "multinomial",
+                      type.measure = "class")
 
 ## Testing
 
