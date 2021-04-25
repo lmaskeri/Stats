@@ -90,11 +90,11 @@ PCA_plot <- ggplot(data = PCA_data, aes(x = PC1,y = PC2)) + aes(color = Class, f
 UMAP <- umap(data4[,-c(1:2)])
 UMAP_data <- data.frame(cbind(label,UMAP$layout))
 
-# Umap with 10 resulting dimensions
+# Umap with 10 dimensions
 UMAP_10 <- umap(data4[,-c(1:2)], n_components = 10)
 UMAP_10_data <- data.frame(cbind(label,UMAP_10$layout))
 
-# Umap with the same number of resulting dimensions as PCA_data
+# Umap with the same number of dimensions as PCA_data
 UMAP_nPCA <- umap(data4[,-c(1:2)], n_components = length(which(V.explained <= 0.95)))
 UMAP_nPCA_data <- data.frame(cbind(label,UMAP_nPCA$layout))
 
@@ -166,16 +166,17 @@ val_PCA <- validate(cv_PCA,PCA_data,Train)
 val_UMAP <- validate(cv_UMAP,UMAP_data,Train)
 val_UMAP_10 <- validate(cv_UMAP_10,UMAP_10_data,Train)
 val_UMAP_nPCA <- validate(cv_UMAP_nPCA,UMAP_nPCA_data,Train)
+val_tSNE <- validate(cv_tSNE,tSNE_data,Train)
 
 
 #### Evaluations ####
 
 
-# function to check how many, if its 0 all were classified correctly - I know this code could be cleaner...
+# function to check how many the model got right, if its 0 all were classified correctly - I know this code could be cleaner...
 length(which(val_data4$Class==val_data4$Predicted)) - length(val_data4$Class)
 length(which(val_PCA$Class==val_PCA$Predicted)) - length(val_PCA$Class)
 length(which(val_UMAP$Class==val_UMAP$Predicted)) - length(val_UMAP$Class)
 length(which(val_UMAP_10$Class==val_UMAP_10$Predicted)) - length(val_UMAP_10$Class)
 length(which(val_UMAP_nPCA$Class==val_UMAP_nPCA$Predicted)) - length(val_UMAP_nPCA$Class)
-length(which(val_data4$Class==val_data4$Predicted)) - length(val_data4$Class)
+length(which(val_tSNE$Class==val_tSNE$Predicted)) - length(val_tSNE$Class)
 
