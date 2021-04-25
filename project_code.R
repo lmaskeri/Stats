@@ -12,10 +12,11 @@ library(ggplot2)
 library(caret)
 
 ## Load data
-# data <- read.csv('/homes/anovak9/stats/data.csv', header = TRUE, stringsAsFactors = FALSE)
-data <- read.csv('C:/Users/Tristan Kosciuch/OneDrive - Loyola University Chicago/Loyola/Classes/STAT 437/Final-Project/TCGA-PANCAN-HiSeq-801x20531/data.csv', header = TRUE, stringsAsFactors = FALSE)
+data <- read.csv('/homes/anovak9/stats/data.csv', header = TRUE, stringsAsFactors = FALSE)
+#data <- read.csv('C:/Users/Tristan Kosciuch/OneDrive - Loyola University Chicago/Loyola/Classes/STAT 437/Final-Project/TCGA-PANCAN-HiSeq-801x20531/data.csv', header = TRUE, stringsAsFactors = FALSE)
 colnames(data)[1] <- 'sample'
-label <- read.csv('C:/Users/Tristan Kosciuch/OneDrive - Loyola University Chicago/Loyola/Classes/STAT 437/Final-Project/TCGA-PANCAN-HiSeq-801x20531/labels.csv') #stringsAsFactors = FALSE
+label <- read.csv('/homes/anovak9/stats/labels.csv', header = TRUE, stringsAsFactors = FALSE)
+#label <- read.csv('C:/Users/Tristan Kosciuch/OneDrive - Loyola University Chicago/Loyola/Classes/STAT 437/Final-Project/TCGA-PANCAN-HiSeq-801x20531/labels.csv') #stringsAsFactors = FALSE
 colnames(label)[1] <- 'sample'
 # str(data)
 # summary(data)
@@ -43,6 +44,7 @@ hist(zeros$Count)
 zeros <- zeros %>% arrange(Count)
 #Keep top 75% of rows in zeros
 keep <- as.integer(20531*0.75)
+#Keeping 15398 genes 
 keep
 zeros2 <- zeros %>% slice(1:keep)
 dim(zeros2)
@@ -81,7 +83,8 @@ PCA_data <- cbind(label,PCA_data)
 hull_PCA <- PCA_data %>% group_by(Class) %>% slice(chull(PC1,PC2))
 # Create a plot using the first two PCs
 # PCA_plot <- autoplot(PCA, data = data4, colour = "Class", frame = TRUE)
-PCA_plot <- ggplot(data = PCA_data, aes(x = PC1,y = PC2)) + aes(color = Class, fill = Class)+ geom_point() + geom_polygon(data = hull_PCA, alpha = 0.4)
+PCA_plot <- ggplot(data = PCA_data, aes(x = PC1,y = PC2)) + aes(color = Class, fill = Class)+ geom_point() + geom_polygon(data = hull_PCA, alpha = 0.4) + labs(title = 'Clustering of PC1 and PC2')
+PCA_plot
 
 
 ## UMAP
@@ -101,8 +104,8 @@ UMAP_nPCA_data <- data.frame(cbind(label,UMAP_nPCA$layout))
 #convex hull for plot
 hull_UMAP <- UMAP_data %>% group_by(Class) %>% slice(chull(X1,X2))
 # Create a plot using the first two Axis
-UMAP_plot <- ggplot(data = UMAP_data, aes(x = X1,y = X2)) + aes(color = Class, fill = Class)+ geom_point() + geom_polygon(data = hull_UMAP, alpha = 0.4)
-
+UMAP_plot <- ggplot(data = UMAP_data, aes(x = X1,y = X2)) + aes(color = Class, fill = Class)+ geom_point() + geom_polygon(data = hull_UMAP, alpha = 0.4) + labs(title = 'Clustering after UMAP ordination')
+UMAP_plot
 
 ## tSNE
 
@@ -113,8 +116,8 @@ tSNE_data <- cbind(label,tSNE$Y)
 #convex hull for plot
 hull_tSNE <- tSNE_data %>% group_by(Class) %>% slice(chull(`1`,`2`))
 # Create a plot using the first two Axis
-tSNE_plot <- ggplot(data = tSNE_data, aes(x = `1`,y = `2`)) + aes(color = Class, fill = Class) + geom_point()+ geom_polygon(data = hull_tSNE, alpha = 0.4)
-
+tSNE_plot <- ggplot(data = tSNE_data, aes(x = `1`,y = `2`)) + aes(color = Class, fill = Class) + geom_point()+ geom_polygon(data = hull_tSNE, alpha = 0.4) + labs(title = 'Clustering after tSNE ordination')
+tSNE_plot
 
 #### Train Test Splitting ####
 
