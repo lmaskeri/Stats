@@ -3,6 +3,7 @@
 # install.packages("umap") # click no to compiling from source
 # install.packages("Rtsne")
 # install.packages("caret")
+# install.packages("ROCR") # I couldn't install this for R version 4.0.2, I should probably upgrade my R - TK
 library(glmnet)
 library(dplyr)
 library(umap)
@@ -70,7 +71,6 @@ data4 <- inner_join(label,data4)
 ## PCA
 
 PCA <- prcomp(data4[,-c(1:2)],center = TRUE, scale. = TRUE)
-length(PCA$sdev) # I noticed 
 # Select the variables that capture  ~0.95 of the variance
 V.explained <- cumsum(PCA$sdev^2/sum(PCA$sdev^2))
 PCA_data <- data.frame(PCA$x[,which(V.explained <= 0.95)])
@@ -84,10 +84,19 @@ hull_PCA <- PCA_data %>% group_by(Class) %>% slice(chull(PC1,PC2))
 PCA_plot <- ggplot(data = PCA_data, aes(x = PC1,y = PC2)) + aes(color = Class, fill = Class)+ geom_point() + geom_polygon(data = hull_PCA, alpha = 0.4)
 
 
-## UMAP - can change the number of resulting dimensions, the default is 2
+## UMAP
 
+# Umap with two dimensions
 UMAP <- umap(data4[,-c(1:2)])
 UMAP_data <- data.frame(cbind(label,UMAP$layout))
+
+# Umap with 10 resulting dimensions
+UMAP_10 <- umap(data4[,-c(1:2)], n_components = 10)
+UMAP_10_data <- data.frame(cbind(label,UMAP_10$layout))
+
+# Umap with the same number of resulting dimensions as PCA_data
+UMAP_nPCA <- umap(data4[,-c(1:2)], n_components = length(which(V.explained <= 0.95)))
+UMAP_nPCA_data <- data.frame(cbind(label,UMAP_nPCA$layout))
 
 #convex hull for plot
 hull_UMAP <- UMAP_data %>% group_by(Class) %>% slice(chull(X1,X2))
@@ -95,7 +104,7 @@ hull_UMAP <- UMAP_data %>% group_by(Class) %>% slice(chull(X1,X2))
 UMAP_plot <- ggplot(data = UMAP_data, aes(x = X1,y = X2)) + aes(color = Class, fill = Class)+ geom_point() + geom_polygon(data = hull_UMAP, alpha = 0.4)
 
 
-## tSNE - can change the number of resulting dimensions, the default is 2
+## tSNE
 
 # theta = 0.0 is an exact tSNE
 tSNE <- Rtsne(as.matrix(data4[,-c(1:2)]), theta=0.0)
@@ -108,8 +117,6 @@ tSNE_plot <- ggplot(data = tSNE_data, aes(x = `1`,y = `2`)) + aes(color = Class,
 
 
 #### Train Test Splitting ####
-
-# The paper did a (Train:108,Test:77) split (line 90, Normalization.R)
 
 set.seed(134)
 # Train test split, current ratio is 9:1 train:test
@@ -128,30 +135,47 @@ cv_PCA <- cv.glmnet(as.matrix(PCA_data[Train,-c(1,2)]), factor(PCA_data[Train,c(
 cv_UMAP <- cv.glmnet(as.matrix(UMAP_data[Train,-c(1,2)]), factor(UMAP_data[Train,c(2)]), family="multinomial", alpha=.93, thresh = 1e-07,
                      lambda = c(0.1,0.05,0.01,0.005,0.001, 0.0005, 0.0001),
                      type.multinomial="grouped", nfolds=10)
+cv_UMAP_10 <- cv.glmnet(as.matrix(UMAP_10_data[Train,-c(1,2)]), factor(UMAP_10_data[Train,c(2)]), family="multinomial", alpha=.93, thresh = 1e-07,
+                     lambda = c(0.1,0.05,0.01,0.005,0.001, 0.0005, 0.0001),
+                     type.multinomial="grouped", nfolds=10)
+cv_UMAP_nPCA <- cv.glmnet(as.matrix(UMAP_nPCA_data[Train,-c(1,2)]), factor(UMAP_nPCA_data[Train,c(2)]), family="multinomial", alpha=.93, thresh = 1e-07,
+                     lambda = c(0.1,0.05,0.01,0.005,0.001, 0.0005, 0.0001),
+                     type.multinomial="grouped", nfolds=10)
 cv_tSNE <- cv.glmnet(as.matrix(tSNE_data[Train,-c(1,2)]), factor(tSNE_data[Train,c(2)]), family="multinomial", alpha=.93, thresh = 1e-07,
                      lambda = c(0.1,0.05,0.01,0.005,0.001, 0.0005, 0.0001),
                      type.multinomial="grouped", nfolds=10)
 
-## Testing
+
+#### Predicting on validation data ####
+
+validate <- function(model,data,train_set){
+  
+  # use the best lambda from cross validation, lambda.min, during prediction 
+  fit <- predict(model, as.matrix(data[-train_set,-c(1,2)]), s = model$lambda.min, type = "class")
+  
+  fit <- cbind(data[-train_set,c(1,2)],fit)
+  
+  colnames(fit)[3] <- "Predicted"
+  
+  return(fit)
+  
+}
+
+val_data4 <- validate(cv_data4,data4,Train)
+val_PCA <- validate(cv_PCA,PCA_data,Train)
+val_UMAP <- validate(cv_UMAP,UMAP_data,Train)
+val_UMAP_10 <- validate(cv_UMAP_10,UMAP_10_data,Train)
+val_UMAP_nPCA <- validate(cv_UMAP_nPCA,UMAP_nPCA_data,Train)
 
 
-
-## Evaluations
-
+#### Evaluations ####
 
 
-
-
-
-
-## Normalization
-
-
-## Data transformations
-
-# PCA
-
-
-
-# tSNE
+# function to check how many, if its 0 all were classified correctly - I know this code could be cleaner...
+length(which(val_data4$Class==val_data4$Predicted)) - length(val_data4$Class)
+length(which(val_PCA$Class==val_PCA$Predicted)) - length(val_PCA$Class)
+length(which(val_UMAP$Class==val_UMAP$Predicted)) - length(val_UMAP$Class)
+length(which(val_UMAP_10$Class==val_UMAP_10$Predicted)) - length(val_UMAP_10$Class)
+length(which(val_UMAP_nPCA$Class==val_UMAP_nPCA$Predicted)) - length(val_UMAP_nPCA$Class)
+length(which(val_data4$Class==val_data4$Predicted)) - length(val_data4$Class)
 
