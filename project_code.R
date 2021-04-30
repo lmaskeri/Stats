@@ -177,8 +177,7 @@ val_tSNE <- validate(cv_tSNE,tSNE_data,Train)
 
 #### Evaluations ####
 
-
-# function to check how many the model got right, if its 0 all were classified correctly - I know this code could be cleaner...
+## Function to check how many the model got right, if its 0 all were classified correctly - I know this code could be cleaner...
 length(which(val_data4$Class==val_data4$Predicted)) - length(val_data4$Class)
 length(which(val_PCA$Class==val_PCA$Predicted)) - length(val_PCA$Class)
 length(which(val_UMAP$Class==val_UMAP$Predicted)) - length(val_UMAP$Class)
@@ -186,30 +185,34 @@ length(which(val_UMAP_10$Class==val_UMAP_10$Predicted)) - length(val_UMAP_10$Cla
 length(which(val_UMAP_nPCA$Class==val_UMAP_nPCA$Predicted)) - length(val_UMAP_nPCA$Class)
 length(which(val_tSNE$Class==val_tSNE$Predicted)) - length(val_tSNE$Class)
 
+## Time complexity of different classifiers 
+times <- read.csv('/homes/anovak9/stats/Stats/times.csv', header = FALSE, stringsAsFactors = FALSE)
+rownames(times) <- c('model', 'ordination', 'cv', 'val', 'tot_runtime')
+times <- times[,2:7]
+times
+#Only use total runtimes for plot
+tot_time <- times[c(1,5),]
+tot_time <- as.data.frame(t(tot_time))
+tot_time
+#Plot
+ggplot(tot_time, aes(x = model, y = tot_runtime))+
+  geom_bar(stat = 'identity', fill = 'deepskyblue2', width = 0.5, col = 'black')+
+  labs(title = 'Total run time of each classifier', x = '\n Classifier Type', y = 'Time (sec) \n')+
+  theme(axis.text.x = element_text(size = 14), axis.title = element_text(size = 16), plot.title = element_text(size = 18, face = 'bold', hjust = 0.5), axis.text.y = element_text(size = 13))
+
 
 #### ROC Curves ####
 
 # Data4 ROC
 
-data4_num <- transform(val_data4, Predicted = factor(Predicted, 
-                                                       levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                       labels = c(1, 2, 3, 4, 5)))
-data4_num <- transform(val_data4, Class = factor(Class, 
-                                                   levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                   labels = c(1, 2, 3, 4, 5)))
+data4_num <- transform(val_data4, Predicted = factor(Predicted, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)) ,  Class = factor(Class, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)))
 data4_roc <- multiclass.roc(as.numeric(data4_num$Class), as.numeric(data4_num$Predicted))
 data4_rocs <- data4_roc[['rocs']]
 plot.roc(data4_rocs[[1]], col = 2, lwd = 3, print.auc = TRUE, add = FALSE, legacy.axes = TRUE, xlab = "Specificity", ylab = "Sensitivity")
 
 
 # PCA ROC
-
-PCA_num <- transform(val_PCA, Predicted = factor(Predicted, 
-                                                       levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                       labels = c(1, 2, 3, 4, 5)))
-PCA_num <- transform(val_PCA, Class = factor(Class, 
-                                                   levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                   labels = c(1, 2, 3, 4, 5)))
+PCA_num <- transform(val_PCA, Predicted = factor(Predicted, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)) ,  Class = factor(Class, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)))
 PCA_roc <- multiclass.roc(as.numeric(PCA_num$Class), as.numeric(PCA_num$Predicted))
 PCA_rocs <- PCA_roc[['rocs']]
 plot.roc(PCA_rocs[[1]], col = 3, lwd = 3, print.auc = TRUE, add = FALSE, legacy.axes = TRUE, xlab = "Specificity", ylab = "Sensitivity")
@@ -217,12 +220,7 @@ plot.roc(PCA_rocs[[1]], col = 3, lwd = 3, print.auc = TRUE, add = FALSE, legacy.
 
 #UMAP ROC
 
-UMAP_num <- transform(val_UMAP, Predicted = factor(Predicted, 
-                                                 levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                 labels = c(1, 2, 3, 4, 5)))
-UMAP_num <- transform(val_UMAP, Class = factor(Class, 
-                                             levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                             labels = c(1, 2, 3, 4, 5)))
+UMAP_num <- transform(val_UMAP, Predicted = factor(Predicted, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)) ,  Class = factor(Class, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)))
 UMAP_roc <- multiclass.roc(as.numeric(UMAP_num$Class), as.numeric(UMAP_num$Predicted))
 UMAP_rocs <- UMAP_roc[['rocs']]
 plot.roc(UMAP_rocs[[1]], col = 4, lwd = 3, print.auc = TRUE, add = FALSE, legacy.axes = TRUE, xlab = "Specificity", ylab = "Sensitivity")
@@ -230,42 +228,24 @@ plot.roc(UMAP_rocs[[1]], col = 4, lwd = 3, print.auc = TRUE, add = FALSE, legacy
 
 #UMAP10 ROC
 
-UMAP_10_num <- transform(val_UMAP_10, Predicted = factor(Predicted, 
-                                                   levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                   labels = c(1, 2, 3, 4, 5)))
-UMAP_10_num <- transform(val_UMAP_10, Class = factor(Class, 
-                                               levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                               labels = c(1, 2, 3, 4, 5)))
+UMAP_10_num <- transform(val_UMAP_10, Predicted = factor(Predicted, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)) ,  Class = factor(Class, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)))
 UMAP_10_roc <- multiclass.roc(as.numeric(UMAP_10_num$Class), as.numeric(UMAP_10_num$Predicted))
 UMAP_10_rocs <- UMAP_10_roc[['rocs']]
 plot.roc(UMAP_10_rocs[[1]], col = 5, lwd = 3, print.auc = TRUE, add = FALSE, legacy.axes = TRUE, xlab = "Specificity", ylab = "Sensitivity")
 
 
 #UMAP_nPCA ROC
-
-UMAP_nPCA_num <- transform(val_UMAP_nPCA, Predicted = factor(Predicted, 
-                                                         levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                         labels = c(1, 2, 3, 4, 5)))
-UMAP_nPCA_num <- transform(val_UMAP_nPCA, Class = factor(Class, 
-                                                     levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                     labels = c(1, 2, 3, 4, 5)))
+UMAP_nPCA_num <- transform(val_UMAP_nPCA, Predicted = factor(Predicted, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)) ,  Class = factor(Class, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)))
 UMAP_nPCA_roc <- multiclass.roc(as.numeric(UMAP_nPCA_num$Class), as.numeric(UMAP_nPCA_num$Predicted))
 UMAP_nPCA_rocs <- UMAP_nPCA_roc[['rocs']]
 plot.roc(UMAP_nPCA_rocs[[1]], col = 6, lwd = 3, print.auc = TRUE, add = FALSE, legacy.axes = TRUE, xlab = "Specificity", ylab = "Sensitivity")
 
 #tSNE ROC
 
-
-tSNE_num <- transform(val_tSNE, Predicted = factor(Predicted, 
-                                                             levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                             labels = c(1, 2, 3, 4, 5)))
-tSNE_num <- transform(val_tSNE, Class = factor(Class, 
-                                                         levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),
-                                                         labels = c(1, 2, 3, 4, 5)))
+tSNE_num <- transform(val_tSNE, Predicted = factor(Predicted, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)) ,  Class = factor(Class, levels = c("BRCA", "LUAD", "PRAD", "COAD", "KIRC"),labels = c(1, 2, 3, 4, 5)))
 tSNE_roc <- multiclass.roc(as.numeric(tSNE_num$Class), as.numeric(tSNE_num$Predicted))
 tSNE_rocs <- tSNE_roc[['rocs']]
 plot.roc(tSNE_rocs[[1]], col = 7, lwd = 3, print.auc = TRUE, add = FALSE, legacy.axes = TRUE, xlab = "Specificity", ylab = "Sensitivity")
-
 
 
 
